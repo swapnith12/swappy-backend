@@ -14,7 +14,6 @@ datasource db {
 }
 
 
-
 model User {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   email         String   @unique
@@ -67,7 +66,6 @@ model Room {
   players     Player[]
   hostId      String?  @db.ObjectId // The user currently drawing
   host        User?    @relation(fields: [hostId], references: [id])
-  wordToGuess String   // The word being drawn
   maxPlayers  Int      @default(4) // Default max players
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt @default(now())

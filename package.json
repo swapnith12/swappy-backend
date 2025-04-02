@@ -2,20 +2,34 @@
   "name": "swappyserver",
   "type": "module",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/app.ts"
+    "dev": "bun run --watch src/app.ts",
+    "build": "bun build src/app.ts --outdir=dist",
+    "start": "bun run dist/app.js"
   },
-  "author": "",
+  "author": "swapnith",
   "license": "ISC",
-  "description": "",
+  "description": "swappy backend",
   "dependencies": {
-    "fastify": "^5.2.1"
+    "@fastify/cors": "^11.0.1",
+    "@fastify/jwt": "^9.1.0",
+    "@prisma/client": "^6.5.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
+    "bcrypt": "^5.1.1",
+    "fastify": "^5.2.2",
+    "fastify-jwt": "^4.2.0",
+    "fastify-plugin": "^5.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "jwt": "^0.2.0",
+    "socket-io": "^1.0.0",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.11",
-    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.2"
   }
 }
