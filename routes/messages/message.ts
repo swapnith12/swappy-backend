@@ -39,7 +39,7 @@ export async function createRoom(fastify: FastifyInstance) {
       }
 
       fastify.io.emit("roomCreated",{roomCode:code,hostID:userId})
-      console.log("room created")
+
       return reply.send({ room });
     } catch (error) {
       console.error(error);

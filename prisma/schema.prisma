@@ -63,7 +63,7 @@ model Room {
   code        String   @unique // Unique code to join room
   createdById String   @db.ObjectId
   createdBy   User     @relation("RoomCreator", fields: [createdById], references: [id])
-  players     Player[]
+  players     Player[] 
   hostId      String?  @db.ObjectId // The user currently drawing
   host        User?    @relation(fields: [hostId], references: [id])
   maxPlayers  Int      @default(4) // Default max players

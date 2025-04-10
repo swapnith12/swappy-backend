@@ -1,7 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "../../lib/prisma";
-import { io } from "../../src/app"; // Ensure io is correctly imported
-import "../../lib/types"; // Ensure Fastify types are properly extended
+import "../../lib/types"; 
 
 export async function joinRoom(fastify: FastifyInstance) {
   fastify.post("/joinRoom", async (req: FastifyRequest, reply: FastifyReply) => {
@@ -21,7 +20,7 @@ export async function joinRoom(fastify: FastifyInstance) {
         return reply.status(404).send({ error: "Room not found" });
       }
       else{
-      // Check if the player is already in the room
+      
       const existingPlayer = await prisma.player.findFirst({
         where: { userId, roomId: room.id },
       });
@@ -30,12 +29,17 @@ export async function joinRoom(fastify: FastifyInstance) {
         return reply.send({ message: "Player is already in the room", room });
       }
 
-      // Add player to the room
+      const roomSize = await prisma.player.count({
+        where:{
+          roomId:room.id
+        }
+      })
+      if (roomSize==4){reply.status(500).send({ error: "room is full" });}
       const newPlayer = await prisma.player.create({
         data: {
           userId,
           roomId: room.id,
-          isHost: false, // Host is assigned only on room creation
+          isHost: false, 
         },
       });
 
@@ -43,15 +47,14 @@ export async function joinRoom(fastify: FastifyInstance) {
         where: { id: room.id },
         data: {
           players: {
-            connect: { id: newPlayer.id }, // Link the new player to the room
+            connect: { id: newPlayer.id }, 
           },
-          updatedAt: new Date(), // Update timestamp
+          updatedAt: new Date(),
         },
-        include: { players: true }, // Include updated players list
+        include: { players: true },
       });
 
-      // Notify all players in the room via Socket.io
-      io.to(updatedRoom.id).emit("playerJoined", { room, newPlayer });
+      fastify.io.to(updatedRoom.id).emit("playerJoined", { room, newPlayer });
 
       return reply.send({ message: "Player joined successfully", room });
     }
