@@ -16,6 +16,7 @@ datasource db {
 
 model User {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  username      String    @unique
   email         String   @unique
   password      String?  // Optional for OAuth users
   emailVerified Boolean  @default(false) // Tracks if email is verified
@@ -28,6 +29,8 @@ model User {
   roomsJoined   Player[] // Keeps track of rooms the user has joined
 
   Room Room[]
+
+  @@unique([id, username])
 }
 
 model Account {
@@ -61,9 +64,9 @@ model VerificationToken {
 model Room {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   code        String   @unique // Unique code to join room
-  createdById String   @db.ObjectId
-  createdBy   User     @relation("RoomCreator", fields: [createdById], references: [id])
-  players     Player[] 
+  createdById String   
+  createdBy   User     @relation("RoomCreator", fields: [createdById], references: [username])
+  players     Player[]
   hostId      String?  @db.ObjectId // The user currently drawing
   host        User?    @relation(fields: [hostId], references: [id])
   maxPlayers  Int      @default(4) // Default max players

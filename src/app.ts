@@ -51,6 +51,24 @@ fastify.ready().then(() => {
     // const newCount = await publisher.incr(CONNECTION_COUNT)
     // await publisher.publish(CONNECTION_COUNT_UPDATED_CHANNEL,newCount)
     console.log("Socket connected:", socket.id);
+    
+    socket.on("roomCreated", ({ roomCode, hostID }: any) => {
+      socket.join(roomCode); 
+      console.log(`Host ${hostID} created and joined room ${roomCode}`);
+
+      fastify.io.to(roomCode).emit("hostJoined", { hostID });
+    });
+
+    socket.on("joinRoom", ({ roomCode, userID }: any) => {
+      socket.join(roomCode);
+      console.log(`User ${userID} joined room ${roomCode}`);
+
+      fastify.io.to(roomCode).emit("playerJoined", {
+        userID,
+        message: `Player ${userID} has joined the room.`,
+      });
+    });
+
 
     socket.on("chatMessage", ({ roomId, message, sender }: any) => {
       console.log("Received message:", message, "from", sender, "in room", roomId);

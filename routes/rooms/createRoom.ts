@@ -8,7 +8,7 @@ export async function createRoom(fastify: FastifyInstance) {
     try {
       const { userId } = req.body as { userId: string }; 
       const { code } = req.body as { code: string };
-
+      console.log(userId,code,"room creation")
       if (!code) {
         return reply.status(400).send({ error: "Room code is required" });
       }
@@ -38,7 +38,7 @@ export async function createRoom(fastify: FastifyInstance) {
         });
       }
 
-      fastify.io.emit("roomCreated",{roomCode:code,hostID:userId})
+      // fastify.io.emit("roomCreated",{roomCode:code,hostID:userId})
       console.log("room created")
       return reply.send({ room });
     } catch (error) {

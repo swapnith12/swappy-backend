@@ -54,7 +54,7 @@ export async function joinRoom(fastify: FastifyInstance) {
         include: { players: true },
       });
 
-      fastify.io.to(updatedRoom.id).emit("playerJoined", { room, newPlayer });
+      // fastify.io.to(updatedRoom.id).emit("playerJoined", { room, newPlayer });
 
       return reply.send({ message: "Player joined successfully", room });
     }
