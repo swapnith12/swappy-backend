@@ -5,6 +5,7 @@ import "../lib/types"
 import {createRoom} from "../routes/rooms/createRoom"
 import {joinRoom} from "../routes/rooms/joinRoom"
 import fastifyCors from '@fastify/cors';
+import { Socket } from 'socket.io';
 // import {Redis} from '@upstash/redis'
 // import { publicEncrypt } from 'crypto';
 // import { count, error } from 'console';
@@ -45,25 +46,23 @@ fastify.register(fastifyCors,{
 })
 fastify.register(createRoom)
 fastify.register(joinRoom)
-
+const words = ["apple","bubble","air","iphone","water","TV","AI","hologram","movie","nothing","internet","1+1","god","moon","heroine","bananna","stool","playstation","camel","lion","mustache"]
 fastify.ready().then(() => {
-  fastify.io.on("connection", async(socket:any) => {
+    fastify.io.on("connection", async(socket:any) => {
     // const newCount = await publisher.incr(CONNECTION_COUNT)
     // await publisher.publish(CONNECTION_COUNT_UPDATED_CHANNEL,newCount)
     console.log("Socket connected:", socket.id);
     
-    socket.on("roomCreated", ({ roomCode, hostID }: any) => {
-      socket.join(roomCode); 
+    socket.on("roomCreated", ({ roomCode, hostID }: any) => { 
       console.log(`Host ${hostID} created and joined room ${roomCode}`);
-
-      fastify.io.to(roomCode).emit("hostJoined", { hostID });
+      socket.to(roomCode).emit("hostJoined", { hostID });
     });
 
     socket.on("joinRoom", ({ roomCode, userID }: any) => {
       socket.join(roomCode);
       console.log(`User ${userID} joined room ${roomCode}`);
 
-      fastify.io.to(roomCode).emit("playerJoined", {
+      socket.to(roomCode).emit("playerJoined", {
         userID,
         message: `Player ${userID} has joined the room.`,
       });
@@ -82,6 +81,11 @@ fastify.ready().then(() => {
     socket.on("clearBoard", () => {
       socket.broadcast.emit("clearBoard");
     });
+    
+    socket.on("guessWord",(roomId:any)=>{
+       const guessWord = words[Math.floor(Math.random()*words.length)]
+       socket.to(roomId).emit(guessWord)
+    }) 
 
     socket.on("disconnect", async() => {
       // const newCount = await publisher.decr(CONNECTION_COUNT)
