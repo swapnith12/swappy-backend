@@ -33,6 +33,9 @@ import { Socket } from 'socket.io';
 
 // await subscriber.subscribe('message',()=>{})
 
+const rooms:any= {}
+let guessWord: string 
+
 const fastify = Fastify({
   logger: false, 
 });
@@ -55,10 +58,18 @@ fastify.ready().then(() => {
     
     socket.on("roomCreated", ({ roomCode, hostID }: any) => { 
       console.log(`Host ${hostID} created and joined room ${roomCode}`);
+      rooms[roomCode]={
+        host:hostID,
+        socketID:socket.id,
+        playersList:[{id:socket.id,player:hostID,score:0,host:true}]
+      }
       socket.to(roomCode).emit("hostJoined", { hostID });
     });
 
     socket.on("joinRoom", ({ roomCode, userID }: any) => {
+      const room=rooms[roomCode]
+      if(room && room.playersList.length >= 0){
+      room.playersList.push({id:socket.id, name: userID,score:0,host:false });
       socket.join(roomCode);
       console.log(`User ${userID} joined room ${roomCode}`);
 
@@ -66,12 +77,36 @@ fastify.ready().then(() => {
         userID,
         message: `Player ${userID} has joined the room.`,
       });
+      } else {
+        socket.emit('error', 'Room full or does not exist');
+       }
     });
 
 
     socket.on("chatMessage", ({ roomId, message, sender }: any) => {
       console.log("Received message:", message, "from", sender, "in room", roomId);
-      fastify.io.to(roomId).emit("receiveMessage", { message, sender });
+      socket.to(roomId).emit("receiveMessage", { message, sender });
+      if(guessWord === message.toLowerCase()){
+          socket.to(roomId).emit("CorrectGuess",{sender})
+          const room = rooms[roomId]
+          const currentHost = room.playersList.filter((p: { id: any; })=> p.id === socket.id)
+          let currentHostIndex = room.playersList.indexOf(currentHost)
+          if (currentHostIndex!==room.playersList.length && room.playersList.length!==1){
+            rooms.playersList[currentHostIndex].host=false
+             currentHostIndex=currentHostIndex+1
+             rooms.playersList[currentHostIndex].host=true
+             socket.to(roomId).emit("Now host is",rooms.playersList[currentHostIndex].name)
+          }
+          else if ( room.playersList.length!==1){
+            rooms.playersList[currentHostIndex].host=false
+            currentHostIndex=currentHostIndex-1
+            rooms.playersList[currentHostIndex].host=true
+            socket.to(roomId).emit("Now host is",rooms.playersList[currentHostIndex].name)
+          }
+          else {
+            socket.to(roomId).emit("Add more players for mazaa!!")
+          }
+      }
     });
 
     socket.on("onDraw", ({ roomId, drawingData }:any) => {
@@ -82,15 +117,44 @@ fastify.ready().then(() => {
       socket.broadcast.emit("clearBoard");
     });
     
-    socket.on("guessWord",(roomId:any)=>{
-       const guessWord = words[Math.floor(Math.random()*words.length)]
-       socket.to(roomId).emit(guessWord)
-    }) 
+    socket.on("guessWord", (roomId: any) => {
+      console.log(`Server received 'guessWord' event for room: ${roomId}`);
+      guessWord = words[Math.floor(Math.random() * words.length)];
+      console.log(`Server emitting 'guessWord': ${guessWord} to room: ${roomId}`);
+      socket.to(roomId).emit('guessWord', guessWord);
+    });
 
     socket.on("disconnect", async() => {
       // const newCount = await publisher.decr(CONNECTION_COUNT)
       // await publisher.publish(CONNECTION_COUNT_UPDATED_CHANNEL,newCount)
-      console.log("Socket disconnected:", socket.id);
+      console.log(`User disconnected: ${socket.id}`);
+      
+      for (const roomCode in rooms) {
+          const room = rooms[roomCode];
+          const playerLeft = room.playersList.filter((p: { id: any; })=> p.id === socket.id)
+          if(playerLeft.host===true){
+            if(room.playersList.length!==0){
+            socket.to(roomCode).emit('Host left the room');
+            const indexOfPlayer = room.playersList.indexOf(playerLeft)
+            room.playersList[indexOfPlayer+1].host=true
+            socket.emit("NewHost",room.playersList[indexOfPlayer].name)
+            }
+            else{
+              delete rooms[roomCode];
+              console.log(`Room ${roomCode} deleted`);
+            }
+          }
+          else if (room.playersList.some((p: { id: any; })=> p.id === socket.id)) {
+              socket.to(roomCode).emit('Player Left');
+              console.log(`User left room ${roomCode}, notifying opponent`);
+              room.playersList=room.playersList.filter((p: { id: any; })=>p.id!==socket.id)
+              if(room.playersList.length===0){
+              delete rooms[roomCode];
+              }else if (room.playersList.length>1 )
+              console.log(`Room ${roomCode} deleted`);
+              break;
+          }
+      }
     });
   });
 });
@@ -131,9 +195,10 @@ fastify.get("/" ,(req: FastifyRequest, reply: FastifyReply) => {
 
 const start = async () => {
   const PORT = process.env.PORT || 4000;
+  const HOST = '0.0.0.0'
   try {
-    await fastify.listen({ port: Number(PORT) });
-    console.log(`Server is now listening on port ${PORT}`);
+    await fastify.listen({ port: Number(PORT) , host: HOST});
+    console.log(`Server is now listening on http://${HOST}:${PORT}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
