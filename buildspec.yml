@@ -3,22 +3,30 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto8
+      nodejs: 20  # or your required Node version
+    commands:
+      - curl -fsSL https://bun.sh/install | bash
+      - export PATH="$HOME/.bun/bin:$PATH"
+      - echo Installing Bun and dependencies...
+      - bun install
   pre_build:
     commands:
       - echo Logging in to AWS CodeArtifact...
-      - CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain swappy-backend --domain-owner 692859925831 --region eu-north-1 --query authorizationToken --output text`
-      - export CODEARTIFACT_AUTH_TOKEN
+      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+          --domain swappy-backend \
+          --domain-owner 692859925831 \
+          --region eu-north-1 \
+          --query authorizationToken \
+          --output text)
+      - echo "//swappy-backend-692859925831.d.codeartifact.eu-north-1.amazonaws.com/npm/swappy-backend/:_authToken=${CODEARTIFACT_AUTH_TOKEN}" > .npmrc
   build:
     commands:
       - echo Build started on `date`
-      - mvn clean install -s settings.xml
+      - bun run build
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Packaging artifacts...
-      - mvn package -s settings.xml
 artifacts:
   files:
-    - target/*.war
+    - dist/**/*
   discard-paths: no
