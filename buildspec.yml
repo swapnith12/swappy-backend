@@ -29,4 +29,5 @@ phases:
 artifacts:
   files:
     - dist/**/*
+    - scripts/post_deploy.sh
   discard-paths: no
