@@ -28,6 +28,7 @@ phases:
       - echo Build completed on `date`
 artifacts:
   files:
+    - appspec.yml
     - dist/**/*
     - scripts/post_deploy.sh
   discard-paths: no
