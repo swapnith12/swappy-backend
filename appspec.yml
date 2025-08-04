@@ -5,6 +5,9 @@ files:
   - source: /
     destination: /home/ec2-user/swappy-backend
     overwrite: true
+  - source: scripts/
+    destination: /home/ec2-user/swappy-backend/scripts
+    overwrite: true
 
 hooks:
   BeforeInstall:
