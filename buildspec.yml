@@ -26,7 +26,7 @@ phases:
   post_build:
     commands:
       - chmod +x scripts/post_deploy.sh
-      - chmod +x scripts/cleanup.sh.sh
+      - chmod +x scripts/cleanup.sh
       - echo Build completed on `date`
 artifacts:
   files:
