@@ -7,6 +7,10 @@ files:
     overwrite: true
 
 hooks:
+  BeforeInstall:
+    - location: scripts/cleanup.sh
+      timeout: 300
+      runas: ec2-user
   AfterInstall:
     - location: scripts/post_deploy.sh
       timeout: 300
