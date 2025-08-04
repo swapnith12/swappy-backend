@@ -8,7 +8,6 @@ files:
   - source: scripts/
     destination: /home/ec2-user/swappy-backend/scripts
     overwrite: true
-
 hooks:
   BeforeInstall:
     - location: scripts/cleanup.sh
