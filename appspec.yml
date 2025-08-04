@@ -4,6 +4,7 @@ os: linux
 files:
   - source: /
     destination: /home/ec2-user/swappy-backend
+    overwrite: true
 
 hooks:
   AfterInstall:
