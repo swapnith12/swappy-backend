@@ -25,6 +25,7 @@ phases:
       - bun run build
   post_build:
     commands:
+      - chmod +x scripts/post_deploy.sh
       - echo Build completed on `date`
 artifacts:
   files:
