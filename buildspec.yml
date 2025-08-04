@@ -26,10 +26,12 @@ phases:
   post_build:
     commands:
       - chmod +x scripts/post_deploy.sh
+      - chmod +x scripts/cleanup.sh.sh
       - echo Build completed on `date`
 artifacts:
   files:
     - appspec.yml
     - dist/**/*
     - scripts/post_deploy.sh
+    - scripts/cleanup.sh
   discard-paths: no
